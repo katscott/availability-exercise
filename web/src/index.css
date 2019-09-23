@@ -26,3 +26,37 @@ body {
 .book {
   margin: 0 10px 10px;
 }
+
+
+.advisors-enter,
+.advisors-time-enter,
+.booked-time-enter {
+  opacity: 0;
+}
+.advisors-enter-active,
+.advisors-time-enter-active,
+.booked-time-enter-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in;
+}
+.advisors-exit,
+.advisors-time-exit,
+.booked-time-exit  {
+  opacity: 1;
+}
+.advisors-exit-active,
+.advisors-time-exit-active,
+.booked-time-exit-active {
+  opacity: 0;
+  transition: opacity 500ms ease-in;
+}
+
+
+#fixed-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 5px;
+    z-index: 999;
+}

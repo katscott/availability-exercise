@@ -1,100 +1,107 @@
 import React, { Component } from 'react';
+import { connect } from "react-redux";
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.fetchToday();
-  }
+import actions from './redux/actions';
+import selectors from "./redux/selectors";
 
-  async fetchToday() {
-    try {
-      const res = await fetch("http://localhost:4433/today");
-      const json = await res.json();
-      this.setState({today: json.today});
-    } catch (e) {
-      console.error("Failed to fetch 'today' data", e);
+import AdvisorsAvailabilityList from './components/AdvisorsAvailabilityList';
+import BookingsList from './components/BookingsList';
+
+export class App extends Component {
+    constructor(props) {
+        super(props);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleChange = this.handleChange.bind(this);
+        this.showMessage = this.showMessage.bind(this);
+        this.hideMessage = this.hideMessage.bind(this);
     }
-  }
 
-  render() {
-    return (
-      <div className="App container">
-        <h1>Book Time with an Advisor</h1>
+    componentDidMount() {
+        this.props.getToday();
+    }
 
-        {this.state.today && <span id="today">Today is {this.state.today}.</span>}
+    componentWillUnmount() {
+        clearTimeout(this.messageTimeout)
+    }
 
-        <form id="name-form" className="col-md-6">
-          <div className="form-group">
-            <label htmlFor="name-field">Your Name</label>
-            <input type="text" id="name-field" className="form-control" />
-          </div>
-        </form>
+    componentDidUpdate(prevProps) {
+        if (prevProps.error !== this.props.error) {
+            this.showMessage();
+        }
+    }
 
-        <h2>Available Times</h2>
-        <table className="advisors table">
-          <thead>
-            <tr>
-              <th>Advisor ID</th>
-              <th>Available Times</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>35545</td>
-              <td>
-                <ul className="list-unstyled">
-                  <li>
-                    <time dateTime="2019-04-04T13:00:00-04:00" className="book-time">4/4/2019 1:00 pm</time>
-                    <button className="book btn-small btn-primary">Book</button>
-                  </li>
-                  <li>
-                    <time dateTime="2019-04-05T10:00:00-04:00" className="book-time">4/5/2019 10:00 am</time>
-                    <button className="book btn-small btn-primary">Book</button>
-                  </li>
-                </ul>
-              </td>
-            </tr>
-            <tr>
-              <td>36232</td>
-              <td>
-                <ul className="list-unstyled">
-                  <li>
-                    <time dateTime="2019-04-02T13:00:00-04:00" className="book-time">4/2/2019 1:00 pm</time>
-                    <button className="book btn-small btn-primary">Book</button>
-                  </li>
-                  <li>
-                    <time dateTime="2019-04-03T11:00:00-04:00" className="book-time">4/3/2019 11:00 am</time>
-                    <button className="book btn-small btn-primary">Book</button>
-                  </li>
-                </ul>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    showMessage() {
+        this.refs.fixedMessage.style.display = "block";
+        this.messageTimeout = setTimeout(this.hideMessage, 5000)
+    }
 
-        <h2>Booked Times</h2>
-        <table className="bookings table">
-          <thead>
-            <tr>
-              <th>Advisor ID</th>
-              <th>Student Name</th>
-              <th>Date/Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>36232</td>
-              <td>John Smith</td>
-              <td>
-                <time dateTime="2019-04-03T10:00:00-04:00">4/3/2019 10:00 am</time>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+    hideMessage() {
+        this.refs.fixedMessage.style.display = "none";
+        this.messageTimeout = null;
+    }
+
+    handleSubmit(e) {
+        e.preventDefault();
+    }
+
+    handleChange(e) {
+        this.props.updateStudentName(e.target.value);
+    }
+
+    render() {
+        const today = this.props.today;
+        const student_name = this.props.student_name;
+        const error = this.props.error;
+        return (
+            <div className="App container">
+                <h1>Book Time with an Advisor</h1>
+
+                {today && <span id="today">Today is {today}.</span>}
+
+                <div id="fixed-message" ref="fixedMessage" style={{ display: 'none' }}>
+                    <div className="container">
+                        <div className="row justify-content-center">
+                            <div className="alert alert-danger" role="alert">
+                                {error.message}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="name-form" className="col-md-6" onSubmit={this.handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="name-field">Your Name</label>
+                        <input type="text" id="name-field" className="form-control" required value={student_name} onChange={this.handleChange} />
+                    </div>
+                </form>
+
+                <h2>Available Times</h2>
+                <AdvisorsAvailabilityList />
+
+                <h2>Booked Times</h2>
+                <BookingsList />
+            </div>
+        );
+    }
 }
 
-export default App;
+const mapStateToProps = state => {
+    const today = selectors.getToday(state);
+    const studentName = selectors.getStudentName(state);
+    const error = selectors.getError(state);
+    return { today, studentName, error };
+};
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        getToday: () => {
+            dispatch(actions.getToday());
+        },
+        updateStudentName: (name) => {
+            dispatch(actions.updateStudentName(name));
+        }
+    };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
+
