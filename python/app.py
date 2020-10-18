@@ -4,6 +4,7 @@ from datetime import date, datetime
 import requests
 import requests_cache
 import threading
+from dateutil import parser
 
 from bookings import get_booked_times, add_booked_time
 
@@ -63,3 +64,24 @@ def bookings():
         return jsonify({"booked": True})
     else:
         return jsonify(booked_times)
+
+
+def findClosestTime(timeStr, timesToCheck):
+    time = parser.parse(timeStr)
+
+    currentClosestTime = ''
+    currentClosestTimeDiff = 0
+
+    for checkTimeStr in timesToCheck:
+        checkTime = parser.parse(checkTimeStr)
+        absDiff = abs(time - checkTime)
+
+        if currentClosestTime == '' or absDiff < currentClosestTimeDiff:
+            currentClosestTime = checkTimeStr
+            currentClosestTimeDiff = absDiff
+            continue
+
+    return currentClosestTime
+
+
+

@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  python:
+    build: ./python
+    ports:
+      - "4433:4433"
+
+  web:
+    build: ./web
+    ports:
+      - "3000:3000"
+    depends_on:
+      - python
+    environment:
+      - REACT_APP_API_URL=http://localhost:4433

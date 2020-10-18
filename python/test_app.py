@@ -1,5 +1,5 @@
 from datetime import date
-from app import app
+from app import app, findClosestTime
 from bookings import BOOKED_TIMES
 from unittest import mock
 import copy
@@ -126,3 +126,42 @@ def test_bookings_post_time_conflict():
         assert resp.status_code == 200
         assert resp.json == {"booked": False, "message": "Time already booked"}
         assert BOOKED_TIMES == BOOKED_TIME_MOCK_DEFAULT
+
+
+def test_get_closest_time_basic():
+        time = '2000-01-01T15:00:00-04:00'
+        times = [
+                '2000-01-01T16:00:00-04:00',
+                '2000-01-01T17:00:00-04:00'
+                ]
+
+        result = findClosestTime(time, times)
+
+        assert result == '2000-01-01T16:00:00-04:00'
+
+
+def test_get_closest_time_unordered():
+        time = '2000-01-02T15:00:00-04:00'
+        times = [
+                '2000-01-01T16:00:00-04:00',
+                '2000-01-02T16:00:00-04:00',
+                '2000-01-01T18:00:00-04:00',
+                '2000-01-03T16:00:00-04:00',
+                '2000-01-01T17:00:00-04:00'
+                ]
+
+        result = findClosestTime(time, times)
+
+        assert result == '2000-01-02T16:00:00-04:00'
+
+
+def test_get_closest_time_after_midnight():
+        time = '2000-01-01T23:00:00-04:00'
+        times = [
+                '2000-01-01T16:00:00-04:00',
+                '2000-01-02T00:00:00-04:00'
+                ]
+
+        result = findClosestTime(time, times)
+
+        assert result == '2000-01-02T00:00:00-04:00'
